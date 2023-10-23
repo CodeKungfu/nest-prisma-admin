@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model sys_config {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  key        String   @unique(map: "IDX_2c363c25cf99bcaab3a7f389ba") @db.VarChar(50)
+  name       String   @db.VarChar(50)
+  value      String?  @db.VarChar(255)
+  remark     String?  @db.VarChar(255)
+}
+
+model sys_department {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  parent_id  Int?
+  name       String   @db.VarChar(255)
+  order_num  Int?     @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sys_login_log {
+  created_at     DateTime  @default(now()) @db.DateTime(6)
+  updated_at     DateTime  @default(now()) @db.DateTime(6)
+  id             Int       @id @default(autoincrement())
+  user_id        Int?
+  ip             String?   @db.VarChar(255)
+  time           DateTime? @db.DateTime(0)
+  ua             String?   @db.VarChar(500)
+  login_location String    @default("") @db.VarChar(255)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sys_menu {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  parent_id  Int?
+  name       String   @db.VarChar(255)
+  router     String?  @db.VarChar(255)
+  perms      String?  @db.VarChar(255)
+  type       Boolean  @default(false)
+  icon       String?  @db.VarChar(255)
+  order_num  Int?     @default(0)
+  view_path  String?  @db.VarChar(255)
+  keepalive  Int?     @default(1) @db.TinyInt
+  is_show    Int?     @default(1) @db.TinyInt
+  is_ext     Int?     @default(0) @db.TinyInt
+  open_mode  Int?     @default(1) @db.TinyInt
+}
+
+model sys_req_log {
+  created_at   DateTime @default(now()) @db.DateTime(6)
+  updated_at   DateTime @default(now()) @db.DateTime(6)
+  id           Int      @id @default(autoincrement())
+  ip           String?  @db.VarChar(255)
+  user_id      Int?
+  params       String?  @db.Text
+  action       String?  @db.VarChar(100)
+  method       String?  @db.VarChar(15)
+  status       Int?
+  consume_time Int?     @default(0)
+}
+
+model sys_role {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  user_id    String   @db.VarChar(255)
+  name       String   @unique(map: "IDX_223de54d6badbe43a5490450c3") @db.VarChar(255)
+  label      String   @unique(map: "IDX_f2d07943355da93c3a8a1c411a") @db.VarChar(50)
+  remark     String?  @default("") @db.VarChar(255)
+}
+
+model sys_role_department {
+  created_at    DateTime @default(now()) @db.DateTime(6)
+  updated_at    DateTime @default(now()) @db.DateTime(6)
+  id            Int      @id @default(autoincrement())
+  role_id       Int
+  department_id Int
+}
+
+model sys_role_menu {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  role_id    Int
+  menu_id    Int
+}
+
+model sys_task {
+  created_at DateTime  @default(now()) @db.DateTime(6)
+  updated_at DateTime  @default(now()) @db.DateTime(6)
+  id         Int       @id @default(autoincrement())
+  name       String    @unique(map: "IDX_ef8e5ab5ef2fe0ddb1428439ef") @db.VarChar(50)
+  service    String    @db.VarChar(255)
+  type       Int       @default(0) @db.TinyInt
+  status     Int       @default(1) @db.TinyInt
+  start_time DateTime? @db.DateTime(0)
+  end_time   DateTime? @db.DateTime(0)
+  limit      Int?      @default(0)
+  cron       String?   @db.VarChar(255)
+  every      Int?
+  data       String?   @db.Text
+  job_opts   String?   @db.Text
+  remark     String?   @db.VarChar(255)
+}
+
+model sys_task_log {
+  created_at   DateTime @default(now()) @db.DateTime(6)
+  updated_at   DateTime @default(now()) @db.DateTime(6)
+  id           Int      @id @default(autoincrement())
+  task_id      Int
+  status       Int      @default(0) @db.TinyInt
+  detail       String?  @db.Text
+  consume_time Int?     @default(0)
+}
+
+model sys_user {
+  created_at    DateTime @default(now()) @db.DateTime(6)
+  updated_at    DateTime @default(now()) @db.DateTime(6)
+  id            Int      @id @default(autoincrement())
+  department_id Int
+  name          String   @db.VarChar(255)
+  username      String   @unique(map: "IDX_9e7164b2f1ea1348bc0eb0a7da") @db.VarChar(255)
+  password      String   @db.VarChar(255)
+  nick_name     String?  @db.VarChar(255)
+  head_img      String?  @db.VarChar(255)
+  email         String?  @default("") @db.VarChar(255)
+  phone         String?  @default("") @db.VarChar(255)
+  remark        String?  @default("") @db.VarChar(255)
+  psalt         String   @db.VarChar(32)
+  status        Int?     @default(1) @db.TinyInt
+}
+
+model sys_user_role {
+  created_at DateTime @default(now()) @db.DateTime(6)
+  updated_at DateTime @default(now()) @db.DateTime(6)
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  role_id    Int
+}
