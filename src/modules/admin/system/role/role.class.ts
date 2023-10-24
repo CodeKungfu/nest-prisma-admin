@@ -1,23 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import SysRoleDepartment from 'src/entities/admin/sys-role-department.entity';
-import SysRoleMenu from 'src/entities/admin/sys-role-menu.entity';
-import SysRole from 'src/entities/admin/sys-role.entity';
+import { sys_role_department, sys_role_menu, sys_role } from '@prisma/client';
 
 export class RoleInfo {
-  @ApiProperty({
-    type: SysRole,
-  })
-  roleInfo: SysRole;
+  @ApiProperty()
+  roleInfo: sys_role;
 
-  @ApiProperty({
-    type: [SysRoleMenu],
-  })
-  menus: SysRoleMenu[];
+  @ApiProperty()
+  menus: sys_role_menu[];
 
-  @ApiProperty({
-    type: [SysRoleDepartment],
-  })
-  depts: SysRoleDepartment[];
+  @ApiProperty()
+  depts: sys_role_department[];
 }
 
 export class CreatedRoleId {

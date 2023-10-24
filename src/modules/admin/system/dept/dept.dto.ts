@@ -19,13 +19,13 @@ export class CreateDeptDto {
 
   @ApiProperty({ description: '父级部门id' })
   @IsInt()
-  parentId: number;
+  parent_id: number;
 
   @ApiProperty({ description: '排序编号', required: false })
   @IsOptional()
   @IsInt()
   @Min(0)
-  orderNum: number;
+  order_num: number;
 }
 
 export class UpdateDeptDto extends CreateDeptDto {
@@ -72,7 +72,7 @@ export class MoveDept {
   @IsInt()
   @Min(0)
   @IsOptional()
-  parentId: number;
+  parent_id: number;
 }
 
 export class MoveDeptDto {

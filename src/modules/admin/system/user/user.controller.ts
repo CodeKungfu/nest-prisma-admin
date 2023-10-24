@@ -5,7 +5,7 @@ import {
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
-import { PaginatedResponseDto } from 'src/common/class/res.class';
+// import { PaginatedResponseDto } from 'src/common/class/res.class';
 import { ADMIN_PREFIX } from '../../admin.constants';
 import { IAdminUser } from '../../admin.interface';
 import { AdminUser } from '../../core/decorators/admin-user.decorator';
@@ -18,7 +18,7 @@ import {
   PasswordUserDto,
   UpdateUserDto,
 } from './user.dto';
-import { PageSearchUserInfo, UserDetailInfo } from './user.class';
+import { PageSearchUserInfo } from './user.class';
 import { SysUserService } from './user.service';
 
 @ApiSecurity(ADMIN_PREFIX)
@@ -41,9 +41,9 @@ export class SysUserController {
   @ApiOperation({
     summary: '查询管理员信息',
   })
-  @ApiOkResponse({ type: UserDetailInfo })
+  @ApiOkResponse()
   @Get('info')
-  async info(@Query() dto: InfoUserDto): Promise<UserDetailInfo> {
+  async info(@Query() dto: InfoUserDto): Promise<any> {
     return await this.userService.info(dto.userId);
   }
 
@@ -64,7 +64,7 @@ export class SysUserController {
   async page(
     @Body() dto: PageSearchUserDto,
     @AdminUser() user: IAdminUser,
-  ): Promise<PaginatedResponseDto<PageSearchUserInfo>> {
+  ): Promise<any> {
     const [list, total] = await this.userService.page(user.uid, dto);
     // const total = await this.userService.count(user.uid, dto.departmentIds);
     return {

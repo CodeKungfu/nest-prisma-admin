@@ -27,14 +27,13 @@ import { SysParamConfigController } from './param-config/param-config.controller
 import { SysParamConfigService } from './param-config/param-config.service';
 import { SysServeController } from './serve/serve.controller';
 import { SysServeService } from './serve/serve.service';
-import { ConfigurationKeyPaths } from '@/config/configuration';
 
 @Module({
   imports: [
     BullModule.registerQueueAsync({
       name: SYS_TASK_QUEUE_NAME,
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService<ConfigurationKeyPaths>) => ({
+      useFactory: (configService: ConfigService) => ({
         redis: {
           host: configService.get<string>('redis.host'),
           port: configService.get<number>('redis.port'),

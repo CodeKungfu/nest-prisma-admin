@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import SysMenu from 'src/entities/admin/sys-menu.entity';
+import { sys_menu } from '@prisma/client';
 
 export class MenuItemAndParentInfoResult {
   @ApiProperty({ description: '菜单' })
-  menu?: SysMenu;
+  menu?: sys_menu;
 
   @ApiProperty({ description: '父级菜单' })
-  parentMenu?: SysMenu;
+  parentMenu?: sys_menu;
 }

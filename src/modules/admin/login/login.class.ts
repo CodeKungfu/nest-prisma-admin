@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import SysMenu from 'src/entities/admin/sys-menu.entity';
+import { sys_menu } from '@prisma/client';
 
 export class ImageCaptcha {
   @ApiProperty({
@@ -19,8 +19,8 @@ export class LoginToken {
 }
 
 export class PermMenuInfo {
-  @ApiProperty({ description: '菜单列表', type: [SysMenu] })
-  menus: SysMenu[];
+  @ApiProperty({ description: '菜单列表', type: [] })
+  menus: sys_menu[];
 
   @ApiProperty({ description: '权限列表', type: [String] })
   perms: string[];

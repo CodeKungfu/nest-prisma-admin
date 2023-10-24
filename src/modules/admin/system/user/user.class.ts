@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import SysUser from '@/entities/admin/sys-user.entity';
+// import { sys_user } from '@prisma/client';
 
 export class AccountInfo {
   @ApiProperty()
@@ -70,14 +70,14 @@ export class PageSearchUserInfo {
   roleNames: string[];
 }
 
-export class UserDetailInfo extends SysUser {
-  @ApiProperty({
-    description: '关联角色',
-  })
-  roles: number[];
+// export class UserDetailInfo extends sys_user {
+//   @ApiProperty({
+//     description: '关联角色',
+//   })
+//   roles: number[];
 
-  @ApiProperty({
-    description: '关联部门名称',
-  })
-  departmentName: string;
-}
+//   @ApiProperty({
+//     description: '关联部门名称',
+//   })
+//   departmentName: string;
+// }

@@ -7,6 +7,9 @@ import { SysRoleService } from '../role/role.service';
 import { DeptDetailInfo } from './dept.class';
 import { MoveDept, UpdateDeptDto } from './dept.dto';
 
+import { prisma } from 'src/prisma';
+import { sys_department } from '@prisma/client';
+
 @Injectable()
 export class SysDeptService {
   constructor(
@@ -17,22 +20,32 @@ export class SysDeptService {
   /**
    * 获取所有部门
    */
-  async list(): Promise<SysDepartment[]> {
-    return await this.deptRepositoty.find({ order: { orderNum: 'DESC' } });
+  async list(): Promise<sys_department[]> {
+    return await prisma.sys_department.findMany({
+      orderBy: {
+        order_num: 'desc',
+      },
+    });
   }
 
   /**
    * 根据ID查找部门信息
    */
   async info(id: number): Promise<DeptDetailInfo> {
-    const department = await this.deptRepositoty.findOne({ where: { id } });
+    const department = await prisma.sys_department.findUnique({
+      where: {
+        id,
+      },
+    });
     if (isEmpty(department)) {
       throw new ApiException(10019);
     }
     let parentDepartment = null;
-    if (department.parentId) {
-      parentDepartment = await this.deptRepositoty.findOne({
-        where: { id: department.parentId },
+    if (department.parent_id) {
+      parentDepartment = await prisma.sys_department.findUnique({
+        where: {
+          id: department.parent_id,
+        },
       });
     }
     return { department, parentDepartment };
@@ -42,10 +55,13 @@ export class SysDeptService {
    * 更新部门信息
    */
   async update(param: UpdateDeptDto): Promise<void> {
-    await this.deptRepositoty.update(param.id, {
-      parentId: param.parentId === -1 ? undefined : param.parentId,
-      name: param.name,
-      orderNum: param.orderNum,
+    await prisma.sys_department.update({
+      data: {
+        parent_id: param.parent_id === -1 ? undefined : param.parent_id,
+        name: param.name,
+        order_num: param.order_num,
+      },
+      where: { id: param.id },
     });
   }
 
@@ -53,19 +69,25 @@ export class SysDeptService {
    * 转移部门
    */
   async transfer(userIds: number[], deptId: number): Promise<void> {
-    await this.userRepositoty.update(
-      { id: In(userIds) },
-      { departmentId: deptId },
-    );
+    await prisma.sys_user.updateMany({
+      data: {
+        department_id: deptId,
+      },
+      where: {
+        id: { in: userIds },
+      },
+    });
   }
 
   /**
    * 新增部门
    */
   async add(deptName: string, parentDeptId: number): Promise<void> {
-    await this.deptRepositoty.insert({
-      name: deptName,
-      parentId: parentDeptId === -1 ? null : parentDeptId,
+    await prisma.sys_department.create({
+      data: {
+        name: deptName,
+        parent_id: parentDeptId === -1 ? null : parentDeptId,
+      },
     });
   }
 
@@ -73,13 +95,16 @@ export class SysDeptService {
    * 移动排序
    */
   async move(depts: MoveDept[]): Promise<void> {
-    await this.entityManager.transaction(async (manager) => {
-      for (let i = 0; i < depts.length; i++) {
-        await manager.update(
-          SysDepartment,
-          { id: depts[i].id },
-          { parentId: depts[i].parentId },
-        );
+    await prisma.$transaction(async (prisma) => {
+      for (const item of depts) {
+        await prisma.sys_department.update({
+          data: {
+            parent_id: item.parent_id,
+          },
+          where: {
+            id: item.id,
+          },
+        });
       }
     });
   }
@@ -88,51 +113,61 @@ export class SysDeptService {
    * 根据ID删除部门
    */
   async delete(departmentId: number): Promise<void> {
-    await this.deptRepositoty.delete(departmentId);
+    await prisma.sys_department.delete({
+      where: {
+        id: departmentId,
+      },
+    });
   }
 
   /**
    * 根据部门查询关联的用户数量
    */
   async countUserByDeptId(id: number): Promise<number> {
-    return await this.userRepositoty.count({ where: { departmentId: id } });
+    return await prisma.sys_user.count({
+      where: {
+        department_id: id,
+      },
+    });
   }
 
   /**
    * 根据部门查询关联的角色数量
    */
   async countRoleByDeptId(id: number): Promise<number> {
-    return await this.roleDeptRepositoty.count({ where: { departmentId: id } });
+    return await prisma.sys_role_department.count({
+      where: {
+        department_id: id,
+      },
+    });
   }
 
   /**
    * 查找当前部门下的子部门数量
    */
   async countChildDept(id: number): Promise<number> {
-    return await this.deptRepositoty.count({ where: { parentId: id } });
+    return await prisma.sys_department.count({
+      where: {
+        parent_id: id,
+      },
+    });
   }
 
   /**
    * 根据当前角色id获取部门列表
    */
-  async getDepts(uid: number): Promise<SysDepartment[]> {
+  async getDepts(uid: number): Promise<sys_department[]> {
     const roleIds = await this.roleService.getRoleIdByUser(uid);
     let depts: any = [];
     if (includes(roleIds, this.rootRoleId)) {
       // root find all
-      depts = await this.deptRepositoty.find();
+      depts = await prisma.sys_department.findMany();
     } else {
       // [ 1, 2, 3 ] role find
-      depts = await this.deptRepositoty
-        .createQueryBuilder('dept')
-        .innerJoinAndSelect(
-          'sys_role_department',
-          'role_dept',
-          'dept.id = role_dept.department_id',
-        )
-        .andWhere('role_dept.role_id IN (:...roldIds)', { roldIds: roleIds })
-        .orderBy('dept.order_num', 'ASC')
-        .getMany();
+      depts =
+        await prisma.$queryRaw`SELECT * FROM sys_department dept INNER JOIN sys_role_department role_dept ON dept.id = role_dept.department_id where role_dept.role_id IN (${roleIds.join(
+          ',',
+        )}) order by dept.order_num ASC`;
     }
     return depts;
   }

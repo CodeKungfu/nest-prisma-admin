@@ -7,6 +7,7 @@ import { EVENT_KICK } from 'src/modules/ws/ws.event';
 import { UAParser } from 'ua-parser-js';
 import { SysUserService } from '../user/user.service';
 import { OnlineUserInfo } from './online.class';
+import { prisma } from 'src/prisma';
 
 @Injectable()
 export class SysOnlineService {
@@ -63,16 +64,12 @@ export class SysOnlineService {
     currentUid: number,
   ): Promise<OnlineUserInfo[]> {
     const rootUserId = await this.userService.findRootUserId();
-    const result = await this.entityManager.query(
-      `
-      SELECT sys_login_log.created_at, sys_login_log.ip, sys_login_log.ua, sys_user.id, sys_user.username, sys_user.name
-        FROM sys_login_log 
-        INNER JOIN sys_user ON sys_login_log.user_id = sys_user.id 
-        WHERE sys_login_log.created_at IN (SELECT MAX(created_at) as createdAt FROM sys_login_log GROUP BY user_id)
-          AND sys_user.id IN (?)
-      `,
-      [ids],
-    );
+    const result: any =
+      await prisma.$queryRaw`SELECT sys_login_log.created_at, sys_login_log.ip, sys_login_log.ua, sys_user.id, sys_user.username, sys_user.name
+    FROM sys_login_log 
+    INNER JOIN sys_user ON sys_login_log.user_id = sys_user.id 
+    WHERE sys_login_log.created_at IN (SELECT MAX(created_at) as createdAt FROM sys_login_log GROUP BY user_id)
+      AND sys_user.id IN (${ids.join(',')})`;
     if (result) {
       const parser = new UAParser();
       return result.map((e) => {

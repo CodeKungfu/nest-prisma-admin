@@ -12,7 +12,8 @@ import {
   SYS_TASK_QUEUE_NAME,
   SYS_TASK_QUEUE_PREFIX,
 } from '../../admin.constants';
-import { CreateTaskDto, UpdateTaskDto } from './task.dto';
+import { prisma } from 'src/prisma';
+import { sys_task } from '@prisma/client';
 
 @Injectable()
 export class SysTaskService implements OnModuleInit {
@@ -61,7 +62,11 @@ export class SysTaskService implements OnModuleInit {
       await jobs[i].remove();
     }
     // 查找所有需要运行的任务
-    const tasks = await this.taskRepository.find({ where: { status: 1 } });
+    const tasks = await prisma.sys_task.findMany({
+      where: {
+        status: 1,
+      },
+    });
     if (tasks && tasks.length > 0) {
       for (const t of tasks) {
         await this.start(t);
@@ -74,10 +79,10 @@ export class SysTaskService implements OnModuleInit {
   /**
    * 分页查询
    */
-  async page(page: number, count: number): Promise<SysTask[]> {
-    const result = await this.taskRepository.find({
-      order: {
-        id: 'ASC',
+  async page(page: number, count: number): Promise<sys_task[]> {
+    const result = await prisma.sys_task.findMany({
+      orderBy: {
+        id: 'asc',
       },
       take: count,
       skip: page * count,
@@ -89,31 +94,39 @@ export class SysTaskService implements OnModuleInit {
    * count task
    */
   async count(): Promise<number> {
-    return await this.taskRepository.count();
+    return await prisma.sys_task.count();
   }
 
   /**
    * task info
    */
-  async info(id: number): Promise<SysTask> {
-    return await this.taskRepository.findOne({ where: { id } });
+  async info(id: number): Promise<sys_task> {
+    return await prisma.sys_task.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 
   /**
    * delete task
    */
-  async delete(task: SysTask): Promise<void> {
+  async delete(task: sys_task): Promise<void> {
     if (!task) {
       throw new Error('Task is Empty');
     }
     await this.stop(task);
-    await this.taskRepository.delete(task.id);
+    await prisma.sys_task.delete({
+      where: {
+        id: task.id,
+      },
+    });
   }
 
   /**
    * 手动执行一次
    */
-  async once(task: SysTask): Promise<void | never> {
+  async once(task: sys_task): Promise<void | never> {
     if (task) {
       await this.taskQueue.add(
         { id: task.id, service: task.service, args: task.data },
@@ -127,8 +140,19 @@ export class SysTaskService implements OnModuleInit {
   /**
    * 添加任务
    */
-  async addOrUpdate(param: CreateTaskDto | UpdateTaskDto): Promise<void> {
-    const result = await this.taskRepository.save(param);
+  async addOrUpdate(param: any): Promise<void> {
+    let result: any = {};
+    const id: any = param?.id;
+    if (id) {
+      result = await prisma.sys_task.update({
+        data: param,
+        where: { id },
+      });
+    } else {
+      result = await prisma.sys_task.create({
+        data: param,
+      });
+    }
     const task = await this.info(result.id);
     if (result.status === 0) {
       await this.stop(task);
@@ -140,7 +164,7 @@ export class SysTaskService implements OnModuleInit {
   /**
    * 启动任务
    */
-  async start(task: SysTask): Promise<void> {
+  async start(task: sys_task): Promise<void> {
     if (!task) {
       throw new Error('Task is Empty');
     }
@@ -158,11 +182,11 @@ export class SysTaskService implements OnModuleInit {
         cron: task.cron,
       };
       // Start date when the repeat job should start repeating (only with cron).
-      if (task.startTime) {
-        repeat.startDate = task.startTime;
+      if (task.start_time) {
+        repeat.startDate = task.start_time;
       }
-      if (task.endTime) {
-        repeat.endDate = task.endTime;
+      if (task.end_time) {
+        repeat.endDate = task.end_time;
       }
     }
     if (task.limit > 0) {
@@ -173,14 +197,26 @@ export class SysTaskService implements OnModuleInit {
       { jobId: task.id, removeOnComplete: true, removeOnFail: true, repeat },
     );
     if (job && job.opts) {
-      await this.taskRepository.update(task.id, {
-        jobOpts: JSON.stringify(job.opts.repeat),
-        status: 1,
+      await prisma.sys_task.update({
+        data: {
+          job_opts: JSON.stringify(job.opts.repeat),
+          status: 1,
+        },
+        where: {
+          id: task.id,
+        },
       });
     } else {
       // update status to 0，标识暂停任务，因为启动失败
       job && (await job.remove());
-      await this.taskRepository.update(task.id, { status: 0 });
+      await prisma.sys_task.update({
+        data: {
+          status: 0,
+        },
+        where: {
+          id: task.id,
+        },
+      });
       throw new Error('Task Start failed');
     }
   }
@@ -188,13 +224,20 @@ export class SysTaskService implements OnModuleInit {
   /**
    * 停止任务
    */
-  async stop(task: SysTask): Promise<void> {
+  async stop(task: sys_task): Promise<void> {
     if (!task) {
       throw new Error('Task is Empty');
     }
     const exist = await this.existJob(task.id.toString());
     if (!exist) {
-      await this.taskRepository.update(task.id, { status: 0 });
+      await prisma.sys_task.update({
+        data: {
+          status: 0,
+        },
+        where: {
+          id: task.id,
+        },
+      });
       return;
     }
     const jobs = await this.taskQueue.getJobs([
@@ -210,7 +253,14 @@ export class SysTaskService implements OnModuleInit {
         await jobs[i].remove();
       }
     }
-    await this.taskRepository.update(task.id, { status: 0 });
+    await prisma.sys_task.update({
+      data: {
+        status: 0,
+      },
+      where: {
+        id: task.id,
+      },
+    });
     // if (task.jobOpts) {
     //   await this.app.queue.sys.removeRepeatable(JSON.parse(task.jobOpts));
     //   // update status
@@ -235,7 +285,11 @@ export class SysTaskService implements OnModuleInit {
    */
   async updateTaskCompleteStatus(tid: number): Promise<void> {
     const jobs = await this.taskQueue.getRepeatableJobs();
-    const task = await this.taskRepository.findOne({ where: { id: tid } });
+    const task = await prisma.sys_task.findUnique({
+      where: {
+        id: tid,
+      },
+    });
     // 如果下次执行时间小于当前时间，则表示已经执行完成。
     for (const job of jobs) {
       const currentTime = new Date().getTime();

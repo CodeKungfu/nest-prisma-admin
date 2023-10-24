@@ -7,7 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { ADMIN_PREFIX } from 'src/modules/admin/admin.constants';
 import { ApiException } from 'src/common/exceptions/api.exception';
-import SysDepartment from 'src/entities/admin/sys-department.entity';
+import { sys_department } from '@prisma/client';
 import { AdminUser } from '../../core/decorators/admin-user.decorator';
 import { DeptDetailInfo } from './dept.class';
 import {
@@ -27,16 +27,16 @@ export class SysDeptController {
   constructor(private deptService: SysDeptService) {}
 
   @ApiOperation({ summary: '获取系统部门列表' })
-  @ApiOkResponse({ type: [SysDepartment] })
+  @ApiOkResponse({})
   @Get('list')
-  async list(@AdminUser('uid') uid: number): Promise<SysDepartment[]> {
+  async list(@AdminUser('uid') uid: number): Promise<sys_department[]> {
     return await this.deptService.getDepts(uid);
   }
 
   @ApiOperation({ summary: '创建系统部门' })
   @Post('add')
   async add(@Body() createDeptDto: CreateDeptDto): Promise<void> {
-    await this.deptService.add(createDeptDto.name, createDeptDto.parentId);
+    await this.deptService.add(createDeptDto.name, createDeptDto.parent_id);
   }
 
   @ApiOperation({ summary: '删除系统部门' })

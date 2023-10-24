@@ -10,7 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { PageOptionsDto } from '@/common/dto/page.dto';
+// import { PageOptionsDto } from '@/common/dto/page.dto';
 
 export class DeleteRoleDto {
   @ApiProperty({
@@ -81,28 +81,28 @@ export class InfoRoleDto {
   roleId: number;
 }
 
-export class PageSearchRoleDto extends PageOptionsDto {
-  @ApiProperty({
-    required: false,
-    description: '角色名称',
-  })
-  @IsString()
-  @IsOptional()
-  name = '';
+// export class PageSearchRoleDto extends PageOptionsDto {
+//   @ApiProperty({
+//     required: false,
+//     description: '角色名称',
+//   })
+//   @IsString()
+//   @IsOptional()
+//   name = '';
 
-  @ApiProperty({
-    required: false,
-    description: '角色唯一标识',
-  })
-  @IsString()
-  @IsOptional()
-  label = '';
+//   @ApiProperty({
+//     required: false,
+//     description: '角色唯一标识',
+//   })
+//   @IsString()
+//   @IsOptional()
+//   label = '';
 
-  @ApiProperty({
-    required: false,
-    description: '备注',
-  })
-  @IsString()
-  @IsOptional()
-  remark = '';
-}
+//   @ApiProperty({
+//     required: false,
+//     description: '备注',
+//   })
+//   @IsString()
+//   @IsOptional()
+//   remark = '';
+// }

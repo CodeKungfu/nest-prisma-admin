@@ -7,7 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { PaginatedResponseDto } from 'src/common/class/res.class';
 import { PageOptionsDto } from 'src/common/dto/page.dto';
-import SysConfig from 'src/entities/admin/sys-config.entity';
+import { sys_config } from '@prisma/client';
 import { ADMIN_PREFIX } from '../../admin.constants';
 import {
   CreateParamConfigDto,
@@ -24,11 +24,11 @@ export class SysParamConfigController {
   constructor(private paramConfigService: SysParamConfigService) {}
 
   @ApiOperation({ summary: '分页获取参数配置列表' })
-  @ApiOkResponse({ type: [SysConfig] })
+  @ApiOkResponse()
   @Get('page')
   async page(
     @Query() dto: PageOptionsDto,
-  ): Promise<PaginatedResponseDto<SysConfig>> {
+  ): Promise<PaginatedResponseDto<sys_config>> {
     const list = await this.paramConfigService.getConfigListByPage(
       dto.page - 1,
       dto.limit,
@@ -52,9 +52,9 @@ export class SysParamConfigController {
   }
 
   @ApiOperation({ summary: '查询单个参数配置信息' })
-  @ApiOkResponse({ type: SysConfig })
+  @ApiOkResponse()
   @Get('info')
-  async info(@Query() dto: InfoParamConfigDto): Promise<SysConfig> {
+  async info(@Query() dto: InfoParamConfigDto): Promise<sys_config> {
     return this.paramConfigService.findOne(dto.id);
   }
 

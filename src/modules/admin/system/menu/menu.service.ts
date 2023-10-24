@@ -7,6 +7,8 @@ import { AdminWSService } from 'src/modules/ws/admin-ws.service';
 import { SysRoleService } from '../role/role.service';
 import { MenuItemAndParentInfoResult } from './menu.class';
 import { CreateMenuDto } from './menu.dto';
+import { prisma } from 'src/prisma';
+import { sys_menu } from '@prisma/client';
 
 @Injectable()
 export class SysMenuService {
@@ -20,39 +22,47 @@ export class SysMenuService {
   /**
    * 获取所有菜单
    */
-  async list(): Promise<SysMenu[]> {
-    return await this.menuRepository.find();
+  async list(): Promise<sys_menu[]> {
+    return await prisma.sys_menu.findMany();
   }
 
   /**
    * 保存或新增菜单
    */
-  async save(menu: CreateMenuDto & { id?: number }): Promise<void> {
-    await this.menuRepository.save(menu);
+  async save(menu: any & { id?: number }): Promise<void> {
+    if (menu.id) {
+      const menuId = menu.id;
+      delete menu.id;
+      await prisma.sys_menu.update({
+        data: menu,
+        where: {
+          id: menuId,
+        },
+      });
+    } else {
+      await prisma.sys_menu.create({
+        data: menu,
+      });
+    }
+    // await this.menuRepository.save(menu);
     this.adminWSService.noticeUserToUpdateMenusByRoleIds([this.rootRoleId]);
   }
 
   /**
    * 根据角色获取所有菜单
    */
-  async getMenus(uid: number): Promise<SysMenu[]> {
+  async getMenus(uid: number): Promise<sys_menu[]> {
     const roleIds = await this.roleService.getRoleIdByUser(uid);
-    let menus: SysMenu[] = [];
+    let menus: sys_menu[] = [];
     if (includes(roleIds, this.rootRoleId)) {
       // root find all
-      menus = await this.menuRepository.find();
+      menus = await prisma.sys_menu.findMany();
     } else {
       // [ 1, 2, 3 ] role find
-      menus = await this.menuRepository
-        .createQueryBuilder('menu')
-        .innerJoinAndSelect(
-          'sys_role_menu',
-          'role_menu',
-          'menu.id = role_menu.menu_id',
-        )
-        .andWhere('role_menu.role_id IN (:...roldIds)', { roldIds: roleIds })
-        .orderBy('menu.order_num', 'DESC')
-        .getMany();
+      menus =
+        await prisma.$queryRaw`SELECT menu.* FROM sys_menu menu INNER JOIN sys_role_menu role_menu ON menu.id = role_menu.menu_id where role_menu.role_id IN (${roleIds.join(
+          ',',
+        )}) order by menu.order_num DESC`;
     }
     return menus;
   }
@@ -61,12 +71,12 @@ export class SysMenuService {
    * 检查菜单创建规则是否符合
    */
   async check(dto: CreateMenuDto & { menuId?: number }): Promise<void | never> {
-    if (dto.type === 2 && dto.parentId === -1) {
+    if (dto.type === 2 && dto.parent_id === -1) {
       // 无法直接创建权限，必须有ParentId
       throw new ApiException(10005);
     }
-    if (dto.type === 1 && dto.parentId !== -1) {
-      const parent = await this.getMenuItemInfo(dto.parentId);
+    if (dto.type === 1 && dto.parent_id !== -1) {
+      const parent = await this.getMenuItemInfo(dto.parent_id);
       if (isEmpty(parent)) {
         throw new ApiException(10014);
       }
@@ -78,8 +88,15 @@ export class SysMenuService {
     //判断同级菜单路由是否重复
     if (!Object.is(dto.type, 2)) {
       // 查找所有一级菜单
-      const menus = await this.menuRepository.find({
-        where: { parentId: Object.is(dto.parentId, -1) ? null : dto.parentId },
+      // const menus = await this.menuRepository.find({
+      //   where: {
+      //     parentId: Object.is(dto.parent_id, -1) ? null : dto.parent_id,
+      //   },
+      // });
+      const menus = await prisma.sys_menu.findMany({
+        where: {
+          parent_id: Object.is(dto.parent_id, -1) ? null : dto.parent_id,
+        },
       });
       const router = dto.router.split('/').filter(Boolean).join('/');
       const pathReg = new RegExp(`^/?${router}/?$`);
@@ -98,7 +115,11 @@ export class SysMenuService {
    */
   async findChildMenus(mid: number): Promise<any> {
     const allMenus: any = [];
-    const menus = await this.menuRepository.find({ where: { parentId: mid } });
+    const menus = await prisma.sys_menu.findMany({
+      where: {
+        parent_id: mid,
+      },
+    });
     // if (_.isEmpty(menus)) {
     //   return allMenus;
     // }
@@ -118,8 +139,12 @@ export class SysMenuService {
    * 获取某个菜单的信息
    * @param mid menu id
    */
-  async getMenuItemInfo(mid: number): Promise<SysMenu> {
-    const menu = await this.menuRepository.findOne({ where: { id: mid } });
+  async getMenuItemInfo(mid: number): Promise<sys_menu> {
+    const menu = await prisma.sys_menu.findUnique({
+      where: {
+        id: mid,
+      },
+    });
     return menu;
   }
 
@@ -129,11 +154,17 @@ export class SysMenuService {
   async getMenuItemAndParentInfo(
     mid: number,
   ): Promise<MenuItemAndParentInfoResult> {
-    const menu = await this.menuRepository.findOne({ where: { id: mid } });
-    let parentMenu: SysMenu | undefined = undefined;
-    if (menu && menu.parentId) {
-      parentMenu = await this.menuRepository.findOne({
-        where: { id: menu.parentId },
+    const menu = await prisma.sys_menu.findUnique({
+      where: {
+        id: mid,
+      },
+    });
+    let parentMenu: sys_menu | undefined = undefined;
+    if (menu && menu.parent_id) {
+      parentMenu = await prisma.sys_menu.findUnique({
+        where: {
+          id: menu.parent_id,
+        },
       });
     }
     return { menu, parentMenu };
@@ -143,7 +174,11 @@ export class SysMenuService {
    * 查找节点路由是否存在
    */
   async findRouterExist(router: string): Promise<boolean> {
-    const menus = await this.menuRepository.findOne({ where: { router } });
+    const menus = await prisma.sys_menu.findFirst({
+      where: {
+        router,
+      },
+    });
     return !isEmpty(menus);
   }
 
@@ -156,21 +191,30 @@ export class SysMenuService {
     let result: any = null;
     if (includes(roleIds, this.rootRoleId)) {
       // root find all perms
-      result = await this.menuRepository.find({
-        where: { perms: Not(IsNull()), type: 2 },
+      result = await prisma.sys_menu.findMany({
+        where: {
+          perms: {
+            not: null,
+          },
+          type: 2,
+        },
       });
     } else {
-      result = await this.menuRepository
-        .createQueryBuilder('menu')
-        .innerJoinAndSelect(
-          'sys_role_menu',
-          'role_menu',
-          'menu.id = role_menu.menu_id',
-        )
-        .andWhere('role_menu.role_id IN (:...roldIds)', { roldIds: roleIds })
-        .andWhere('menu.type = 2')
-        .andWhere('menu.perms IS NOT NULL')
-        .getMany();
+      // result = await this.menuRepository
+      //   .createQueryBuilder('menu')
+      //   .innerJoinAndSelect(
+      //     'sys_role_menu',
+      //     'role_menu',
+      //     'menu.id = role_menu.menu_id',
+      //   )
+      //   .andWhere('role_menu.role_id IN (:...roldIds)', { roldIds: roleIds })
+      //   .andWhere('menu.type = 2')
+      //   .andWhere('menu.perms IS NOT NULL')
+      //   .getMany();
+      result =
+        await prisma.$queryRaw`SELECT * FROM sys_menu menu INNER JOIN sys_role_menu role_menu ON menu.id = role_menu.menu_id where role_menu.role_id IN (${roleIds.join(
+          ',',
+        )}) and menu.type = 2 and  menu.perms IS NOT NULL`;
     }
     if (!isEmpty(result)) {
       result.forEach((e) => {
@@ -185,7 +229,13 @@ export class SysMenuService {
    * 删除多项菜单
    */
   async deleteMenuItem(mids: number[]): Promise<void> {
-    await this.menuRepository.delete(mids);
+    await prisma.sys_menu.deleteMany({
+      where: {
+        id: {
+          in: mids,
+        },
+      },
+    });
     this.adminWSService.noticeUserToUpdateMenusByMenuIds(mids);
   }
 

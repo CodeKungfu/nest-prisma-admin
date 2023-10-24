@@ -6,8 +6,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ADMIN_PREFIX } from 'src/modules/admin/admin.constants';
-import { PaginatedResponseDto } from 'src/common/class/res.class';
-import SysRole from 'src/entities/admin/sys-role.entity';
+import { PageOptionsDto } from 'src/common/dto/page.dto';
+// import { PaginatedResponseDto } from 'src/common/class/res.class';
+import { sys_role } from '@prisma/client';
 import { ApiException } from 'src/common/exceptions/api.exception';
 import { AdminUser } from '../../core/decorators/admin-user.decorator';
 import { IAdminUser } from '../../admin.interface';
@@ -17,7 +18,6 @@ import {
   CreateRoleDto,
   DeleteRoleDto,
   InfoRoleDto,
-  PageSearchRoleDto,
   UpdateRoleDto,
 } from './role.dto';
 import { SysRoleService } from './role.service';
@@ -32,25 +32,28 @@ export class SysRoleController {
   ) {}
 
   @ApiOperation({ summary: '获取角色列表' })
-  @ApiOkResponse({ type: [SysRole] })
+  @ApiOkResponse()
   @Get('list')
-  async list(): Promise<SysRole[]> {
+  async list(): Promise<sys_role[]> {
     return await this.roleService.list();
   }
 
   @ApiOperation({ summary: '分页查询角色信息' })
-  @ApiOkResponse({ type: [SysRole] })
+  @ApiOkResponse()
   @Get('page')
-  async page(
-    @Query() dto: PageSearchRoleDto,
-  ): Promise<PaginatedResponseDto<SysRole>> {
-    const [list, total] = await this.roleService.page(dto);
+  async page(@Query() dto: PageOptionsDto): Promise<any> {
+    // const [list, total] = await this.roleService.page(dto);
+    const list = await this.roleService.page({
+      page: dto.page - 1,
+      limit: dto.limit,
+    });
+    const count = await this.roleService.count();
     return {
       list,
       pagination: {
         size: dto.limit,
         page: dto.page,
-        total,
+        total: count,
       },
     };
   }

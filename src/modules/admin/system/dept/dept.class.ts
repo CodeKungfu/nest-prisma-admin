@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import SysDepartment from 'src/entities/admin/sys-department.entity';
+import { sys_department } from '@prisma/client';
 
 export class DeptDetailInfo {
   @ApiProperty({ description: '当前查询的部门' })
-  department?: SysDepartment;
+  department?: sys_department;
 
   @ApiProperty({ description: '所属父级部门' })
-  parentDepartment?: SysDepartment;
+  parentDepartment?: sys_department;
 }

@@ -9,7 +9,7 @@ import { isEmpty } from 'lodash';
 import { PaginatedResponseDto } from 'src/common/class/res.class';
 import { PageOptionsDto } from 'src/common/dto/page.dto';
 import { ApiException } from 'src/common/exceptions/api.exception';
-import SysTask from 'src/entities/admin/sys-task.entity';
+import { sys_task } from '@prisma/client';
 import { ADMIN_PREFIX } from '../../admin.constants';
 import { CheckIdTaskDto, CreateTaskDto, UpdateTaskDto } from './task.dto';
 import { SysTaskService } from './task.service';
@@ -21,11 +21,11 @@ export class SysTaskController {
   constructor(private taskService: SysTaskService) {}
 
   @ApiOperation({ summary: '获取任务列表' })
-  @ApiOkResponse({ type: [SysTask] })
+  @ApiOkResponse()
   @Get('page')
   async page(
     @Query() dto: PageOptionsDto,
-  ): Promise<PaginatedResponseDto<SysTask>> {
+  ): Promise<PaginatedResponseDto<sys_task>> {
     const list = await this.taskService.page(dto.page - 1, dto.limit);
     const count = await this.taskService.count();
     return {
@@ -55,9 +55,9 @@ export class SysTaskController {
   }
 
   @ApiOperation({ summary: '查询任务详细信息' })
-  @ApiOkResponse({ type: SysTask })
+  @ApiOkResponse()
   @Get('info')
-  async info(@Query() dto: CheckIdTaskDto): Promise<SysTask> {
+  async info(@Query() dto: CheckIdTaskDto): Promise<sys_task> {
     return await this.taskService.info(dto.id);
   }
 

@@ -47,7 +47,7 @@ model sys_menu {
   name       String   @db.VarChar(255)
   router     String?  @db.VarChar(255)
   perms      String?  @db.VarChar(255)
-  type       Boolean  @default(false)
+  type       Int  @default(0)
   icon       String?  @db.VarChar(255)
   order_num  Int?     @default(0)
   view_path  String?  @db.VarChar(255)

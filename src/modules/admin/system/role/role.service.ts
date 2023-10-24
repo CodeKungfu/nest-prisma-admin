@@ -2,8 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { difference, filter, includes, isEmpty, map } from 'lodash';
 import { ROOT_ROLE_ID } from 'src/modules/admin/admin.constants';
 import { AdminWSService } from 'src/modules/ws/admin-ws.service';
-import { CreateRoleDto, PageSearchRoleDto, UpdateRoleDto } from './role.dto';
+import { CreateRoleDto, UpdateRoleDto } from './role.dto';
 import { CreatedRoleId, RoleInfo } from './role.class';
+import { sys_role } from '@prisma/client';
+import { prisma } from 'src/prisma';
 
 @Injectable()
 export class SysRoleService {
@@ -15,9 +17,13 @@ export class SysRoleService {
   /**
    * 列举所有角色：除去超级管理员
    */
-  async list(): Promise<SysRole[]> {
-    const result = await this.roleRepository.find({
-      where: { id: Not(this.rootRoleId) },
+  async list(): Promise<sys_role[]> {
+    const result = await prisma.sys_role.findMany({
+      where: {
+        id: {
+          not: this.rootRoleId,
+        },
+      },
     });
     return result;
   }
@@ -26,8 +32,12 @@ export class SysRoleService {
    * 列举所有角色条数：除去超级管理员
    */
   async count(): Promise<number> {
-    const count = await this.roleRepository.count({
-      where: { id: Not(this.rootRoleId) },
+    const count = await prisma.sys_role.count({
+      where: {
+        id: {
+          not: this.rootRoleId,
+        },
+      },
     });
     return count;
   }
@@ -36,12 +46,20 @@ export class SysRoleService {
    * 根据角色获取角色信息
    */
   async info(rid: number): Promise<RoleInfo> {
-    const roleInfo = await this.roleRepository.findOne({ where: { id: rid } });
-    const menus = await this.roleMenuRepository.find({
-      where: { roleId: rid },
+    const roleInfo = await prisma.sys_role.findUnique({
+      where: {
+        id: rid,
+      },
     });
-    const depts = await this.roleDepartmentRepository.find({
-      where: { roleId: rid },
+    const menus = await prisma.sys_role_menu.findMany({
+      where: {
+        role_id: rid,
+      },
+    });
+    const depts = await prisma.sys_role_department.findMany({
+      where: {
+        role_id: rid,
+      },
     });
     return { roleInfo, menus, depts };
   }
@@ -53,10 +71,28 @@ export class SysRoleService {
     if (includes(roleIds, this.rootRoleId)) {
       throw new Error('Not Support Delete Root');
     }
-    await this.entityManager.transaction(async (manager) => {
-      await manager.delete(SysRole, roleIds);
-      await manager.delete(SysRoleMenu, { roleId: In(roleIds) });
-      await manager.delete(SysRoleDepartment, { roleId: In(roleIds) });
+    await prisma.$transaction(async (prisma) => {
+      await prisma.sys_role.deleteMany({
+        where: {
+          id: {
+            in: roleIds,
+          },
+        },
+      });
+      await prisma.sys_role_menu.deleteMany({
+        where: {
+          role_id: {
+            in: roleIds,
+          },
+        },
+      });
+      await prisma.sys_role_department.deleteMany({
+        where: {
+          role_id: {
+            in: roleIds,
+          },
+        },
+      });
     });
   }
 
@@ -65,33 +101,45 @@ export class SysRoleService {
    */
   async add(param: CreateRoleDto, uid: number): Promise<CreatedRoleId> {
     const { name, label, remark, menus, depts } = param;
-    const role = await this.roleRepository.insert({
-      name,
-      label,
-      remark,
-      userId: `${uid}`,
+    // const role = await this.roleRepository.insert({
+    //   name,
+    //   label,
+    //   remark,
+    //   userId: `${uid}`,
+    // });
+    const role = await prisma.sys_role.create({
+      data: {
+        name,
+        label,
+        remark,
+        user_id: `${uid}`,
+      },
     });
-    const { identifiers } = role;
-    const roleId = parseInt(identifiers[0].id);
+    const { id } = role;
+    const roleId = id;
     if (menus && menus.length > 0) {
       // 关联菜单
       const insertRows = menus.map((m) => {
         return {
-          roleId,
-          menuId: m,
+          role_id: roleId,
+          menu_id: m,
         };
       });
-      await this.roleMenuRepository.insert(insertRows);
+      await prisma.sys_role_menu.createMany({
+        data: insertRows,
+      });
     }
     if (depts && depts.length > 0) {
       // 关联部门
       const insertRows = depts.map((d) => {
         return {
-          roleId,
-          departmentId: d,
+          role_id: roleId,
+          department_id: d,
         };
       });
-      await this.roleDepartmentRepository.insert(insertRows);
+      await prisma.sys_role_department.createMany({
+        data: insertRows,
+      });
     }
     return { roleId };
   }
@@ -99,25 +147,33 @@ export class SysRoleService {
   /**
    * 更新角色信息
    */
-  async update(param: UpdateRoleDto): Promise<SysRole> {
+  async update(param: UpdateRoleDto): Promise<sys_role> {
     const { roleId, name, label, remark, menus, depts } = param;
-    const role = await this.roleRepository.save({
-      id: roleId,
-      name,
-      label,
-      remark,
+    const role = await prisma.sys_role.update({
+      data: {
+        name,
+        label,
+        remark,
+      },
+      where: {
+        id: roleId,
+      },
     });
-    const originDeptRows = await this.roleDepartmentRepository.find({
-      where: { roleId },
+    const originDeptRows = await prisma.sys_role_department.findMany({
+      where: {
+        role_id: roleId,
+      },
     });
-    const originMenuRows = await this.roleMenuRepository.find({
-      where: { roleId },
+    const originMenuRows = await prisma.sys_role_menu.findMany({
+      where: {
+        role_id: roleId,
+      },
     });
     const originMenuIds = originMenuRows.map((e) => {
-      return e.menuId;
+      return e.menu_id;
     });
     const originDeptIds = originDeptRows.map((e) => {
-      return e.departmentId;
+      return e.department_id;
     });
     // 开始对比差异
     const insertMenusRowIds = difference(menus, originMenuIds);
@@ -125,46 +181,62 @@ export class SysRoleService {
     const insertDeptRowIds = difference(depts, originDeptIds);
     const deleteDeptRowIds = difference(originDeptIds, depts);
     // using transaction
-    await this.entityManager.transaction(async (manager) => {
+    await prisma.$transaction(async (prisma) => {
       // 菜单
       if (insertMenusRowIds.length > 0) {
         // 有条目更新
         const insertRows = insertMenusRowIds.map((e) => {
           return {
-            roleId,
-            menuId: e,
+            role_id: roleId,
+            menu_id: e,
           };
         });
-        await manager.insert(SysRoleMenu, insertRows);
+        await prisma.sys_role_menu.createMany({
+          data: insertRows,
+        });
       }
       if (deleteMenusRowIds.length > 0) {
         // 有条目需要删除
         const realDeleteRowIds = filter(originMenuRows, (e) => {
-          return includes(deleteMenusRowIds, e.menuId);
+          return includes(deleteMenusRowIds, e.menu_id);
         }).map((e) => {
           return e.id;
         });
-        await manager.delete(SysRoleMenu, realDeleteRowIds);
+        await prisma.sys_role_menu.deleteMany({
+          where: {
+            id: {
+              in: realDeleteRowIds,
+            },
+          },
+        });
       }
       // 部门
       if (insertDeptRowIds.length > 0) {
         // 有条目更新
         const insertRows = insertDeptRowIds.map((e) => {
           return {
-            roleId,
-            departmentId: e,
+            role_id: roleId,
+            department_id: e,
           };
         });
-        await manager.insert(SysRoleDepartment, insertRows);
+        await prisma.sys_role_department.createMany({
+          data: insertRows,
+        });
       }
       if (deleteDeptRowIds.length > 0) {
         // 有条目需要删除
         const realDeleteRowIds = filter(originDeptRows, (e) => {
-          return includes(deleteDeptRowIds, e.departmentId);
+          return includes(deleteDeptRowIds, e.department_id);
         }).map((e) => {
           return e.id;
         });
-        await manager.delete(SysRoleDepartment, realDeleteRowIds);
+        await prisma.sys_role_department.deleteMany({
+          where: {
+            id: {
+              in: realDeleteRowIds,
+            },
+          },
+        });
       }
     });
     // 如果勾选了新的菜单或取消勾选了原有的菜单，则通知前端重新获取权限菜单
@@ -178,20 +250,41 @@ export class SysRoleService {
   /**
    * 分页加载角色信息
    */
-  async page(param: PageSearchRoleDto): Promise<[SysRole[], number]> {
+  async page(param: any): Promise<sys_role[]> {
     const { limit, page, name, label, remark } = param;
-    const result = await this.roleRepository.findAndCount({
+    // const result = await this.roleRepository.findAndCount({
+    //   where: {
+    //     id: Not(this.rootRoleId),
+    //     name: Like(`%${name}%`),
+    //     label: Like(`%${label}%`),
+    //     remark: Like(`%${remark}%`),
+    //   },
+    //   order: {
+    //     id: 'ASC',
+    //   },
+    //   take: limit,
+    //   skip: (page - 1) * limit,
+    // });
+    const result = await prisma.sys_role.findMany({
       where: {
-        id: Not(this.rootRoleId),
-        name: Like(`%${name}%`),
-        label: Like(`%${label}%`),
-        remark: Like(`%${remark}%`),
+        id: {
+          not: this.rootRoleId,
+        },
+        name: {
+          contains: `${name}`,
+        },
+        label: {
+          contains: `${label}`,
+        },
+        remark: {
+          contains: `${remark}`,
+        },
       },
-      order: {
-        id: 'ASC',
+      orderBy: {
+        id: 'asc',
       },
       take: limit,
-      skip: (page - 1) * limit,
+      skip: page * limit,
     });
     return result;
   }
@@ -200,9 +293,9 @@ export class SysRoleService {
    * 根据用户id查找角色信息
    */
   async getRoleIdByUser(id: number): Promise<number[]> {
-    const result = await this.userRoleRepository.find({
+    const result = await prisma.sys_user_role.findMany({
       where: {
-        userId: id,
+        user_id: id,
       },
     });
     if (!isEmpty(result)) {
@@ -220,6 +313,12 @@ export class SysRoleService {
     if (includes(ids, this.rootRoleId)) {
       throw new Error('Not Support Delete Root');
     }
-    return await this.userRoleRepository.count({ where: { roleId: In(ids) } });
+    return await prisma.sys_user_role.count({
+      where: {
+        role_id: {
+          in: ids,
+        },
+      },
+    });
   }
 }

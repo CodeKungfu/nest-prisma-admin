@@ -5,7 +5,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from './redis/redis.module';
 import { RedisService } from './services/redis.service';
 import { UtilService } from './services/util.service';
-import { ConfigurationKeyPaths } from '@/config/configuration';
 
 // common provider list
 const providers = [UtilService, RedisService];
@@ -25,14 +24,14 @@ const providers = [UtilService, RedisService];
     // jwt
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService<ConfigurationKeyPaths>) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
       }),
       inject: [ConfigService],
     }),
     RedisModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService<ConfigurationKeyPaths>) => ({
+      useFactory: (configService: ConfigService) => ({
         host: configService.get<string>('redis.host'),
         port: configService.get<number>('redis.port'),
         password: configService.get<string>('redis.password'),
