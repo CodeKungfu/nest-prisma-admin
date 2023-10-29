@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AdminWSGateway } from 'src/modules/ws/admin-ws.gateway';
 import { RemoteSocket } from 'socket.io';
 import { EVENT_UPDATE_MENU } from './ws.event';
+import { prisma } from 'src/prisma';
 
 @Injectable()
 export class AdminWSService {
@@ -69,10 +70,14 @@ export class AdminWSService {
    * 通过menuIds通知用户更新权限菜单
    */
   async noticeUserToUpdateMenusByMenuIds(menuIds: number[]): Promise<void> {
-    const roleMenus = await this.roleMenuRepository.find({
-      where: { menuId: In(menuIds) },
+    const roleMenus = await prisma.sys_role_menu.findMany({
+      where: {
+        menu_id: {
+          in: menuIds,
+        },
+      },
     });
-    const roleIds = roleMenus.map((n) => n.roleId);
+    const roleIds = roleMenus.map((n) => n.role_id);
     await this.noticeUserToUpdateMenusByRoleIds(roleIds);
   }
 
@@ -80,11 +85,15 @@ export class AdminWSService {
    * 通过roleIds通知用户更新权限菜单
    */
   async noticeUserToUpdateMenusByRoleIds(roleIds: number[]): Promise<void> {
-    const users = await this.userRoleRepository.find({
-      where: { roleId: In(roleIds) },
+    const users = await prisma.sys_user_role.findMany({
+      where: {
+        role_id: {
+          in: roleIds,
+        },
+      },
     });
     if (users) {
-      const userIds = users.map((n) => n.userId);
+      const userIds = users.map((n) => n.role_id);
       await this.noticeUserToUpdateMenusByUserIds(userIds);
     }
   }

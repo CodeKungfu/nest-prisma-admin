@@ -144,7 +144,7 @@ export class SysUserService {
     }
     // 所有用户初始密码为123456
     await prisma.$transaction(async (prisma) => {
-      const salt = this.util.generateRandomValue(32);
+      const salt = await this.util.generateRandomValue(32);
       // 查找配置的初始密码
       const initPassword = await this.paramConfigService.findValueByKey(
         SYS_USER_INITPASSWORD,

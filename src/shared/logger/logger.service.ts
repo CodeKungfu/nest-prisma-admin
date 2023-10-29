@@ -75,7 +75,7 @@ export class LoggerService implements NestLoggerService {
       (this.options.errorLogName = DEFAULT_ERROR_LOG_NAME);
 
     // 初始化 winston
-    this.initWinston();
+    // this.initWinston();
   }
 
   /**
@@ -292,7 +292,7 @@ export class LoggerService implements NestLoggerService {
           )
         : (message as string);
 
-      this.winstonLogger.log(logLevel, output, {
+      this.winstonLogger?.log(logLevel, output, {
         context,
         stack,
         pid: process.pid,

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { FastifyRequest } from 'fastify';
-import { customAlphabet, nanoid } from 'nanoid';
+export const importDynamic = new Function(
+  'modulePath',
+  'return import(modulePath)',
+);
+// import { customAlphabet, nanoid } from 'nanoid';
 import * as CryptoJS from 'crypto-js';
 
 @Injectable()
@@ -79,17 +83,19 @@ export class UtilService {
   /**
    * 生成一个UUID
    */
-  public generateUUID(): string {
+  public async generateUUID(): Promise<string> {
+    const { nanoid } = await importDynamic('nanoid');
     return nanoid();
   }
 
   /**
    * 生成一个随机的值
    */
-  public generateRandomValue(
+  public async generateRandomValue(
     length: number,
     placeholder = '1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM',
-  ): string {
+  ): Promise<string> {
+    const { customAlphabet } = await importDynamic('nanoid');
     const customNanoid = customAlphabet(placeholder, length);
     return customNanoid();
   }

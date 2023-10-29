@@ -1,5 +1,6 @@
 import { HttpModule } from '@nestjs/axios';
-import { Global, CacheModule, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from './redis/redis.module';

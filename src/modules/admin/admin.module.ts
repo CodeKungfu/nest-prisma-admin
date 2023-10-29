@@ -4,7 +4,6 @@ import { AccountModule } from './account/account.module';
 import { ADMIN_PREFIX } from './admin.constants';
 import { AuthGuard } from './core/guards/auth.guard';
 import { LoginModule } from './login/login.module';
-import { NetdiskModule } from './netdisk/netdisk.module';
 import { SystemModule } from './system/system.module';
 
 /**
@@ -17,7 +16,6 @@ import { SystemModule } from './system/system.module';
       {
         path: ADMIN_PREFIX,
         children: [
-          { path: 'netdisk', module: NetdiskModule },
           { path: 'account', module: AccountModule },
           { path: 'sys', module: SystemModule },
         ],
@@ -32,7 +30,6 @@ import { SystemModule } from './system/system.module';
     LoginModule,
     SystemModule,
     AccountModule,
-    NetdiskModule,
   ],
   providers: [
     {

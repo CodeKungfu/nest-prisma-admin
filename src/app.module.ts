@@ -3,7 +3,7 @@ import './polyfill';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
-import { getConfiguration } from './config/configuration';
+// import { getConfiguration } from './config/configuration';
 import { AdminModule } from './modules/admin/admin.module';
 import { SharedModule } from './shared/shared.module';
 import { MissionModule } from './mission/mission.module';
@@ -15,8 +15,9 @@ import { WinstonLogLevel } from './shared/logger/logger.interface';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [getConfiguration],
-      envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+      // load: [getConfiguration],
+      // envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+      envFilePath: ['.env'],
     }),
     BullModule.forRoot({}),
     // custom logger
