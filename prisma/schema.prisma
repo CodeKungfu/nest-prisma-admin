@@ -43,18 +43,18 @@ model sys_menu {
   created_at DateTime @default(now()) @db.DateTime(6)
   updated_at DateTime @default(now()) @db.DateTime(6)
   id         Int      @id @default(autoincrement())
-  parent_id  Int?
+  parentId  Int?     @map("parent_id")
   name       String   @db.VarChar(255)
   router     String?  @db.VarChar(255)
   perms      String?  @db.VarChar(255)
   type       Int  @default(0)
   icon       String?  @db.VarChar(255)
-  order_num  Int?     @default(0)
-  view_path  String?  @db.VarChar(255)
+  orderNum  Int?  @map("order_num")    @default(0)
+  viewPath  String?  @map("view_path")    @db.VarChar(255)
   keepalive  Int?     @default(1) @db.TinyInt
-  is_show    Int?     @default(1) @db.TinyInt
-  is_ext     Int?     @default(0) @db.TinyInt
-  open_mode  Int?     @default(1) @db.TinyInt
+  isShow    Int?  @map("is_show")   @default(1) @db.TinyInt
+  isExt     Int?  @map("is_ext")     @default(0) @db.TinyInt
+  openMode  Int?  @map("open_mode")    @default(1) @db.TinyInt
 }
 
 model sys_req_log {

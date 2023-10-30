@@ -71,12 +71,12 @@ export class SysMenuService {
    * 检查菜单创建规则是否符合
    */
   async check(dto: CreateMenuDto & { menuId?: number }): Promise<void | never> {
-    if (dto.type === 2 && dto.parent_id === -1) {
+    if (dto.type === 2 && dto.parentId === -1) {
       // 无法直接创建权限，必须有ParentId
       throw new ApiException(10005);
     }
-    if (dto.type === 1 && dto.parent_id !== -1) {
-      const parent = await this.getMenuItemInfo(dto.parent_id);
+    if (dto.type === 1 && dto.parentId !== -1) {
+      const parent = await this.getMenuItemInfo(dto.parentId);
       if (isEmpty(parent)) {
         throw new ApiException(10014);
       }
@@ -95,7 +95,7 @@ export class SysMenuService {
       // });
       const menus = await prisma.sys_menu.findMany({
         where: {
-          parent_id: Object.is(dto.parent_id, -1) ? null : dto.parent_id,
+          parentId: Object.is(dto.parentId, -1) ? null : dto.parentId,
         },
       });
       const router = dto.router.split('/').filter(Boolean).join('/');
@@ -117,7 +117,7 @@ export class SysMenuService {
     const allMenus: any = [];
     const menus = await prisma.sys_menu.findMany({
       where: {
-        parent_id: mid,
+        parentId: mid,
       },
     });
     // if (_.isEmpty(menus)) {
@@ -160,10 +160,10 @@ export class SysMenuService {
       },
     });
     let parentMenu: sys_menu | undefined = undefined;
-    if (menu && menu.parent_id) {
+    if (menu && menu.parentId) {
       parentMenu = await prisma.sys_menu.findUnique({
         where: {
-          id: menu.parent_id,
+          id: menu.parentId,
         },
       });
     }

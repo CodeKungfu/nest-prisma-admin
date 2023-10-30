@@ -21,7 +21,7 @@ export class CreateMenuDto {
 
   @ApiProperty({ description: '父级菜单' })
   @IsInt()
-  parent_id: number;
+  parentId: number;
 
   @ApiProperty({ description: '菜单或权限名称' })
   @IsString()
@@ -31,7 +31,7 @@ export class CreateMenuDto {
   @ApiProperty({ description: '排序' })
   @IsInt()
   @Min(0)
-  order_num: number;
+  orderNum: number;
 
   @ApiProperty({ description: '前端路由地址' })
   @IsString()
@@ -41,7 +41,7 @@ export class CreateMenuDto {
   @ApiProperty({ description: '菜单是否显示', required: false, default: true })
   @IsBoolean()
   @ValidateIf((o) => o.type !== 2)
-  readonly is_show: boolean = true;
+  readonly isShow: boolean = true;
 
   @ApiProperty({ description: '开启页面缓存', required: false, default: true })
   @IsBoolean()
@@ -50,12 +50,12 @@ export class CreateMenuDto {
 
   @ApiProperty({ description: '是否外链', required: false, default: false })
   @IsBoolean()
-  readonly is_ext: boolean = false;
+  readonly isExt: boolean = false;
 
   @ApiProperty({ description: '外链打开方式', required: false, default: 1 })
   @IsIn([1, 2])
   @ValidateIf((o) => o.is_ext === true && o.type === 1)
-  readonly open_mode: number;
+  readonly openMode: number;
 
   @ApiProperty({ description: '菜单图标', required: false })
   @IsString()
@@ -73,7 +73,7 @@ export class CreateMenuDto {
   @ValidateIf((o) => o.type !== 2)
   @IsString()
   @IsOptional()
-  view_path: string;
+  viewPath: string;
 }
 
 export class UpdateMenuDto extends CreateMenuDto {

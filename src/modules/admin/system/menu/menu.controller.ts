@@ -41,8 +41,8 @@ export class SysMenuController {
   async add(@Body() dto: CreateMenuDto): Promise<void> {
     // check
     await this.menuService.check(dto);
-    if (dto.parent_id === -1) {
-      dto.parent_id = null;
+    if (dto.parentId === -1) {
+      dto.parentId = null;
     }
     await this.menuService.save(dto);
     if (dto.type === 2) {
@@ -61,8 +61,8 @@ export class SysMenuController {
     }
     // check
     await this.menuService.check(dto);
-    if (dto.parent_id === -1) {
-      dto.parent_id = null;
+    if (dto.parentId === -1) {
+      dto.parentId = null;
     }
 
     const insertData: CreateMenuDto & { id: number } = {
