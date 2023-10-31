@@ -400,7 +400,7 @@ export class SysUserService {
     const sql = `SELECT user.*, dept.name dept_name, role.name role_name FROM sys_user user INNER JOIN sys_department dept ON dept.id = user.department_id INNER JOIN sys_user_role user_role ON user_role.user_id = user.id INNER JOIN sys_role role ON role.id = user_role.role_id  WHERE user.id NOT IN (${rootUserId}, ${uid}) and ${getQuery(
       queryAll,
       departmentIds,
-    )} LIMIT ${page * limit}, ${limit}`;
+    )} LIMIT ${(page - 1) * limit}, ${limit}`;
     const result: any = await prisma.$queryRawUnsafe(`${sql.toString()}`);
     const dealResult: PageSearchUserInfo[] = [];
     // 过滤去重

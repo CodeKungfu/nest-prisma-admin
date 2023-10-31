@@ -252,32 +252,19 @@ export class SysRoleService {
    */
   async page(param: any): Promise<sys_role[]> {
     const { limit, page, name, label, remark } = param;
-    // const result = await this.roleRepository.findAndCount({
-    //   where: {
-    //     id: Not(this.rootRoleId),
-    //     name: Like(`%${name}%`),
-    //     label: Like(`%${label}%`),
-    //     remark: Like(`%${remark}%`),
-    //   },
-    //   order: {
-    //     id: 'ASC',
-    //   },
-    //   take: limit,
-    //   skip: (page - 1) * limit,
-    // });
     const result = await prisma.sys_role.findMany({
       where: {
         id: {
           not: this.rootRoleId,
         },
         name: {
-          contains: `${name}`,
+          contains: `${name ? name : ''}`,
         },
         label: {
-          contains: `${label}`,
+          contains: `${label ? label : ''}`,
         },
         remark: {
-          contains: `${remark}`,
+          contains: `${remark ? remark : ''}`,
         },
       },
       orderBy: {

@@ -65,12 +65,12 @@ export class SysUserController {
     @Body() dto: PageSearchUserDto,
     @AdminUser() user: IAdminUser,
   ): Promise<any> {
-    const [list, total] = await this.userService.page(user.uid, dto);
+    const res: any = await this.userService.page(user.uid, dto);
     // const total = await this.userService.count(user.uid, dto.departmentIds);
     return {
-      list,
+      list: res,
       pagination: {
-        total,
+        total: res.length,
         page: dto.page,
         size: dto.limit,
       },
