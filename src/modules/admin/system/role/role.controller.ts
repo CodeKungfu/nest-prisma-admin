@@ -6,7 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ADMIN_PREFIX } from 'src/modules/admin/admin.constants';
-import { PageOptionsDto } from 'src/common/dto/page.dto';
+// import { PageOptionsDto } from 'src/common/dto/page.dto';
 // import { PaginatedResponseDto } from 'src/common/class/res.class';
 import { sys_role } from '@prisma/client';
 import { ApiException } from 'src/common/exceptions/api.exception';
@@ -41,11 +41,12 @@ export class SysRoleController {
   @ApiOperation({ summary: '分页查询角色信息' })
   @ApiOkResponse()
   @Get('page')
-  async page(@Query() dto: PageOptionsDto): Promise<any> {
+  async page(@Query() dto: any): Promise<any> {
     // const [list, total] = await this.roleService.page(dto);
     const list = await this.roleService.page({
       page: dto.page - 1,
-      limit: dto.limit,
+      limit: Number(dto.limit),
+      name: dto.name,
     });
     const count = await this.roleService.count();
     return {
