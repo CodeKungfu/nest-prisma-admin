@@ -58,11 +58,11 @@ export class SysUserService {
     }
     return {
       name: user.name,
-      nickName: user.nick_name,
+      nickName: user.nickName,
       email: user.email,
       phone: user.phone,
       remark: user.remark,
-      headImg: user.head_img,
+      headImg: user.headImg,
       loginIp: ip,
     };
   }
@@ -152,11 +152,11 @@ export class SysUserService {
       const password = this.util.md5(`${initPassword ?? '123456'}${salt}`);
       const result = await prisma.sys_user.create({
         data: {
-          department_id: param.departmentId,
+          departmentId: param.departmentId,
           username: param.username,
           password,
           name: param.name,
-          nick_name: param.nickName,
+          nickName: param.nickName,
           email: param.email,
           phone: param.phone,
           remark: param.remark,
@@ -167,8 +167,8 @@ export class SysUserService {
       const { roles } = param;
       const insertRoles = roles.map((e) => {
         return {
-          role_id: e,
-          user_id: result.id,
+          roleId: e,
+          userId: result.id,
         };
       });
       // 分配角色
@@ -185,10 +185,10 @@ export class SysUserService {
     await prisma.$transaction(async (prisma) => {
       await prisma.sys_user.update({
         data: {
-          department_id: param.departmentId,
+          departmentId: param.departmentId,
           username: param.username,
           name: param.name,
-          nick_name: param.nickName,
+          nickName: param.nickName,
           email: param.email,
           phone: param.phone,
           remark: param.remark,
@@ -201,13 +201,13 @@ export class SysUserService {
       // 先删除原来的角色关系
       await prisma.sys_user_role.deleteMany({
         where: {
-          user_id: param.id,
+          userId: param.id,
         },
       });
       const insertRoles = param.roles.map((e) => {
         return {
-          role_id: e,
-          user_id: param.id,
+          roleId: e,
+          userId: param.id,
         };
       });
       await prisma.sys_user_role.createMany({
@@ -237,7 +237,7 @@ export class SysUserService {
     }
     const departmentRow = await prisma.sys_department.findUnique({
       where: {
-        id: user.department_id,
+        id: user.departmentId,
       },
     });
     if (isEmpty(departmentRow)) {
@@ -245,11 +245,11 @@ export class SysUserService {
     }
     const roleRows = await prisma.sys_user_role.findMany({
       where: {
-        user_id: user.id,
+        userId: user.id,
       },
     });
     const roles = roleRows.map((e) => {
-      return e.role_id;
+      return e.roleId;
     });
     delete user.password;
     return { ...user, roles, departmentName: departmentRow.name };
@@ -286,7 +286,7 @@ export class SysUserService {
     });
     await prisma.sys_user_role.deleteMany({
       where: {
-        user_id: {
+        userId: {
           in: userIds,
         },
       },
@@ -313,7 +313,7 @@ export class SysUserService {
         id: {
           notIn: [rootUserId, uid],
         },
-        department_id: {
+        departmentId: {
           in: deptIds,
         },
       },
@@ -329,7 +329,7 @@ export class SysUserService {
         id: this.rootRoleId,
       },
     });
-    return result.user_id;
+    return result.userId;
   }
 
   /**

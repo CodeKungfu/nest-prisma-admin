@@ -53,12 +53,12 @@ export class SysRoleService {
     });
     const menus = await prisma.sys_role_menu.findMany({
       where: {
-        role_id: rid,
+        roleId: rid,
       },
     });
     const depts = await prisma.sys_role_department.findMany({
       where: {
-        role_id: rid,
+        roleId: rid,
       },
     });
     return { roleInfo, menus, depts };
@@ -81,14 +81,14 @@ export class SysRoleService {
       });
       await prisma.sys_role_menu.deleteMany({
         where: {
-          role_id: {
+          roleId: {
             in: roleIds,
           },
         },
       });
       await prisma.sys_role_department.deleteMany({
         where: {
-          role_id: {
+          roleId: {
             in: roleIds,
           },
         },
@@ -112,7 +112,7 @@ export class SysRoleService {
         name,
         label,
         remark,
-        user_id: `${uid}`,
+        userId: `${uid}`,
       },
     });
     const { id } = role;
@@ -121,8 +121,8 @@ export class SysRoleService {
       // 关联菜单
       const insertRows = menus.map((m) => {
         return {
-          role_id: roleId,
-          menu_id: m,
+          roleId: roleId,
+          menuId: m,
         };
       });
       await prisma.sys_role_menu.createMany({
@@ -133,8 +133,8 @@ export class SysRoleService {
       // 关联部门
       const insertRows = depts.map((d) => {
         return {
-          role_id: roleId,
-          department_id: d,
+          roleId: roleId,
+          departmentId: d,
         };
       });
       await prisma.sys_role_department.createMany({
@@ -161,19 +161,19 @@ export class SysRoleService {
     });
     const originDeptRows = await prisma.sys_role_department.findMany({
       where: {
-        role_id: roleId,
+        roleId: roleId,
       },
     });
     const originMenuRows = await prisma.sys_role_menu.findMany({
       where: {
-        role_id: roleId,
+        roleId: roleId,
       },
     });
     const originMenuIds = originMenuRows.map((e) => {
-      return e.menu_id;
+      return e.menuId;
     });
     const originDeptIds = originDeptRows.map((e) => {
-      return e.department_id;
+      return e.departmentId;
     });
     // 开始对比差异
     const insertMenusRowIds = difference(menus, originMenuIds);
@@ -282,12 +282,12 @@ export class SysRoleService {
   async getRoleIdByUser(id: number): Promise<number[]> {
     const result = await prisma.sys_user_role.findMany({
       where: {
-        user_id: id,
+        userId: id,
       },
     });
     if (!isEmpty(result)) {
       return map(result, (v) => {
-        return v.role_id;
+        return v.roleId;
       });
     }
     return [];
@@ -302,7 +302,7 @@ export class SysRoleService {
     }
     return await prisma.sys_user_role.count({
       where: {
-        role_id: {
+        roleId: {
           in: ids,
         },
       },

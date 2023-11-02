@@ -23,7 +23,7 @@ export class SysDeptService {
   async list(): Promise<sys_department[]> {
     return await prisma.sys_department.findMany({
       orderBy: {
-        order_num: 'desc',
+        orderNum: 'desc',
       },
     });
   }
@@ -41,10 +41,10 @@ export class SysDeptService {
       throw new ApiException(10019);
     }
     let parentDepartment = null;
-    if (department.parent_id) {
+    if (department.parentId) {
       parentDepartment = await prisma.sys_department.findUnique({
         where: {
-          id: department.parent_id,
+          id: department.parentId,
         },
       });
     }
@@ -57,9 +57,9 @@ export class SysDeptService {
   async update(param: UpdateDeptDto): Promise<void> {
     await prisma.sys_department.update({
       data: {
-        parent_id: param.parent_id === -1 ? undefined : param.parent_id,
+        parentId: param.parent_id === -1 ? undefined : param.parent_id,
         name: param.name,
-        order_num: param.order_num,
+        orderNum: param.order_num,
       },
       where: { id: param.id },
     });
@@ -71,7 +71,7 @@ export class SysDeptService {
   async transfer(userIds: number[], deptId: number): Promise<void> {
     await prisma.sys_user.updateMany({
       data: {
-        department_id: deptId,
+        departmentId: deptId,
       },
       where: {
         id: { in: userIds },
@@ -86,7 +86,7 @@ export class SysDeptService {
     await prisma.sys_department.create({
       data: {
         name: deptName,
-        parent_id: parentDeptId === -1 ? null : parentDeptId,
+        parentId: parentDeptId === -1 ? null : parentDeptId,
       },
     });
   }
@@ -99,7 +99,7 @@ export class SysDeptService {
       for (const item of depts) {
         await prisma.sys_department.update({
           data: {
-            parent_id: item.parent_id,
+            parentId: item.parent_id,
           },
           where: {
             id: item.id,
@@ -126,7 +126,7 @@ export class SysDeptService {
   async countUserByDeptId(id: number): Promise<number> {
     return await prisma.sys_user.count({
       where: {
-        department_id: id,
+        departmentId: id,
       },
     });
   }
@@ -137,7 +137,7 @@ export class SysDeptService {
   async countRoleByDeptId(id: number): Promise<number> {
     return await prisma.sys_role_department.count({
       where: {
-        department_id: id,
+        departmentId: id,
       },
     });
   }
@@ -148,7 +148,7 @@ export class SysDeptService {
   async countChildDept(id: number): Promise<number> {
     return await prisma.sys_department.count({
       where: {
-        parent_id: id,
+        parentId: id,
       },
     });
   }

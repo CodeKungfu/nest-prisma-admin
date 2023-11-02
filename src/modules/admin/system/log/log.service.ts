@@ -18,8 +18,8 @@ export class SysLogService {
     await prisma.sys_login_log.create({
       data: {
         ip,
-        login_location: loginLocation,
-        user_id: uid,
+        loginLocation: loginLocation,
+        userId: uid,
         ua,
       },
     });
@@ -43,36 +43,21 @@ export class SysLogService {
    * 分页加载日志信息
    */
   async pageGetLoginLog(page: number, count: number): Promise<LoginLogInfo[]> {
-    // const result = await this.getRepo().admin.sys.LoginLog.find({
-    //   order: {
-    //     id: 'DESC',
-    //   },
-    //   take: count,
-    //   skip: page * count,
-    // });
-    // const result = await this.loginLogRepository
-    //   .createQueryBuilder('login_log')
-    //   .innerJoinAndSelect('sys_user', 'user', 'login_log.user_id = user.id')
-    //   .orderBy('login_log.created_at', 'DESC')
-    //   .offset(page * count)
-    //   .limit(count)
-    //   .getRawMany();
     const result: any =
       await prisma.$queryRaw`SELECT * FROM sys_login_log INNER JOIN sys_user ON sys_login_log.user_id = sys_user.id order by sys_login_log.created_at DESC LIMIT ${
         page * count
       }, ${count}`;
     const parser = new UAParser();
     return result.map((e) => {
-      const u = parser.setUA(e.login_log_ua).getResult();
-
+      const u = parser.setUA(e.ua).getResult();
       return {
-        id: e.login_log_id,
-        ip: e.login_log_ip,
+        id: e.id,
+        ip: e.ip,
         os: `${u.os.name} ${u.os.version}`,
         browser: `${u.browser.name} ${u.browser.version}`,
-        time: e.login_log_created_at,
-        username: e.user_username,
-        loginLocation: e.login_log_login_location,
+        time: e.created_at,
+        username: e.username,
+        loginLocation: e.login_location,
       };
     });
   }
@@ -96,7 +81,7 @@ export class SysLogService {
   ): Promise<number> {
     const result = await prisma.sys_task_log.create({
       data: {
-        task_id: tid,
+        taskId: tid,
         status,
         detail: err,
       },

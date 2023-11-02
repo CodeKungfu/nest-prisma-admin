@@ -182,11 +182,11 @@ export class SysTaskService implements OnModuleInit {
         cron: task.cron,
       };
       // Start date when the repeat job should start repeating (only with cron).
-      if (task.start_time) {
-        repeat.startDate = task.start_time;
+      if (task.startTime) {
+        repeat.startDate = task.startTime;
       }
-      if (task.end_time) {
-        repeat.endDate = task.end_time;
+      if (task.endTime) {
+        repeat.endDate = task.endTime;
       }
     }
     if (task.limit > 0) {
@@ -199,7 +199,7 @@ export class SysTaskService implements OnModuleInit {
     if (job && job.opts) {
       await prisma.sys_task.update({
         data: {
-          job_opts: JSON.stringify(job.opts.repeat),
+          jobOpts: JSON.stringify(job.opts.repeat),
           status: 1,
         },
         where: {
