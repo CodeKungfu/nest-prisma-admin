@@ -187,8 +187,8 @@ export class SysRoleService {
         // 有条目更新
         const insertRows = insertMenusRowIds.map((e) => {
           return {
-            role_id: roleId,
-            menu_id: e,
+            roleId: roleId,
+            menuId: e,
           };
         });
         await prisma.sys_role_menu.createMany({
@@ -198,7 +198,7 @@ export class SysRoleService {
       if (deleteMenusRowIds.length > 0) {
         // 有条目需要删除
         const realDeleteRowIds = filter(originMenuRows, (e) => {
-          return includes(deleteMenusRowIds, e.menu_id);
+          return includes(deleteMenusRowIds, e.menuId);
         }).map((e) => {
           return e.id;
         });
@@ -215,8 +215,8 @@ export class SysRoleService {
         // 有条目更新
         const insertRows = insertDeptRowIds.map((e) => {
           return {
-            role_id: roleId,
-            department_id: e,
+            roleId: roleId,
+            departmentId: e,
           };
         });
         await prisma.sys_role_department.createMany({
@@ -226,7 +226,7 @@ export class SysRoleService {
       if (deleteDeptRowIds.length > 0) {
         // 有条目需要删除
         const realDeleteRowIds = filter(originDeptRows, (e) => {
-          return includes(deleteDeptRowIds, e.department_id);
+          return includes(deleteDeptRowIds, e.departmentId);
         }).map((e) => {
           return e.id;
         });

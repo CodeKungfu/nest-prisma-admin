@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
@@ -39,18 +39,18 @@ export class CreateMenuDto {
   router: string;
 
   @ApiProperty({ description: '菜单是否显示', required: false, default: true })
-  @IsBoolean()
+  @IsNumber()
   @ValidateIf((o) => o.type !== 2)
-  readonly isShow: boolean = true;
+  readonly isShow: number = 1;
 
   @ApiProperty({ description: '开启页面缓存', required: false, default: true })
-  @IsBoolean()
+  @IsNumber()
   @ValidateIf((o) => o.type === 1)
-  readonly keepalive: boolean = true;
+  readonly keepalive: number = 1;
 
   @ApiProperty({ description: '是否外链', required: false, default: false })
-  @IsBoolean()
-  readonly isExt: boolean = false;
+  @IsNumber()
+  readonly isExt: number = 0;
 
   @ApiProperty({ description: '外链打开方式', required: false, default: 1 })
   @IsIn([1, 2])
@@ -80,7 +80,7 @@ export class UpdateMenuDto extends CreateMenuDto {
   @ApiProperty({ description: '更新的菜单ID' })
   @IsInt()
   @Min(0)
-  menu_id: number;
+  menuId: number;
 }
 
 /**
@@ -90,7 +90,7 @@ export class DeleteMenuDto {
   @ApiProperty({ description: '删除的菜单ID' })
   @IsInt()
   @Min(0)
-  menu_id: number;
+  menuId: number;
 }
 
 /**
@@ -101,5 +101,5 @@ export class InfoMenuDto {
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  menu_id: number;
+  menuId: number;
 }

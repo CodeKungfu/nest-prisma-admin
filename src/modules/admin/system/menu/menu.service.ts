@@ -33,6 +33,7 @@ export class SysMenuService {
     if (menu.id) {
       const menuId = menu.id;
       delete menu.id;
+      delete menu.menuId;
       await prisma.sys_menu.update({
         data: menu,
         where: {

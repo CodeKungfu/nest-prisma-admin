@@ -55,7 +55,7 @@ export class SysMenuController {
   @Post('update')
   async update(@Body() dto: UpdateMenuDto): Promise<void> {
     //
-    if (dto.menu_id <= FORBIDDEN_OP_MENU_ID_INDEX) {
+    if (dto.menuId <= FORBIDDEN_OP_MENU_ID_INDEX) {
       // 系统内置功能不提供删除
       throw new ApiException(10016);
     }
@@ -67,7 +67,7 @@ export class SysMenuController {
 
     const insertData: CreateMenuDto & { id: number } = {
       ...dto,
-      id: dto.menu_id,
+      id: dto.menuId,
     };
     await this.menuService.save(insertData);
     if (dto.type === 2) {
@@ -80,14 +80,14 @@ export class SysMenuController {
   @Post('delete')
   async delete(@Body() dto: DeleteMenuDto): Promise<void> {
     // 68为内置init.sql中插入最后的索引编号
-    if (dto.menu_id <= FORBIDDEN_OP_MENU_ID_INDEX) {
+    if (dto.menuId <= FORBIDDEN_OP_MENU_ID_INDEX) {
       // 系统内置功能不提供删除
       throw new ApiException(10016);
     }
     // 如果有子目录，一并删除
-    const childMenus = await this.menuService.findChildMenus(dto.menu_id);
+    const childMenus = await this.menuService.findChildMenus(dto.menuId);
     await this.menuService.deleteMenuItem(
-      flattenDeep([dto.menu_id, childMenus]),
+      flattenDeep([dto.menuId, childMenus]),
     );
     // 刷新在线用户权限
     await this.menuService.refreshOnlineUserPerms();
@@ -97,6 +97,6 @@ export class SysMenuController {
   @ApiOkResponse({ type: MenuItemAndParentInfoResult })
   @Get('info')
   async info(@Query() dto: InfoMenuDto): Promise<MenuItemAndParentInfoResult> {
-    return await this.menuService.getMenuItemAndParentInfo(dto.menu_id);
+    return await this.menuService.getMenuItemAndParentInfo(dto.menuId);
   }
 }
