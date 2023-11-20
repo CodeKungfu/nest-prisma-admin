@@ -1,4 +1,5 @@
 # nest-prisma-admin
-1. sql
-deploy > sql > init.sql
-2. nestjs + prisma
+1. nest, prisma cms backend system
+2. sql
+   deploy > sql > init.sql
+3. nestjs + prisma
